@@ -1,0 +1,37 @@
+# CI
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+  pull_request:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Test
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Check out repository
+
+      - uses: ghdl/setup-ghdl-ci@nightly
+        with:
+          backend: llvm
+
+      - name: Check syntax
+        run: |
+          ghdl find . -name '*.vhd' -print0| xargs -0 -I {} ghdl -s {}
+
+      - name: Check VHDL linting rules
+        run: |
+          git clone https://gist.github.com/d1acee9fd68388636c50a4349abfa72b.git bakalint
+          find . -name '*.vhd' -print0| xargs -0 -I {} perl bakalint/bakalint.pl --input={} --no-header
